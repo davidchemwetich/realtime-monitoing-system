@@ -68,11 +68,11 @@ Visit [http://localhost](http://localhost) to access the app.
 
 ### Real-time Chat Interface
 
-![Chat Interface](https://i.postimg.cc/rKXvDc1c/Screenshot-From-2025-08-06-00-04-58.png)
+![Chat Interface](https://imgur.com/5qOlL9f.png)
 
 ### Active Users List
 
-![Active Users](https://i.postimg.cc/SJ6H85d9/Screenshot-From-2025-08-06-00-06-24.png)
+![Active Users](https://imgur.com/hcUFvfn.png)
 
 ---
 
