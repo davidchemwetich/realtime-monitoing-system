@@ -15,7 +15,7 @@ new class extends Component {
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-slate-50 border-b border-slate-200 shadow-sm">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -23,17 +23,41 @@ new class extends Component {
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        <x-application-logo class="block h-9 w-auto fill-current text-slate-800" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+                <div class="hidden space-x-4 sm:-my-px sm:ms-10 sm:flex">
 
+                    <!-- Chat Link -->
                     <x-nav-link :href="route('chat')" :active="request()->routeIs('chat')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="currentColor" fill-opacity="0"
+                                d="M5 15.5c1 1 2.5 2 4 2.5c-0.71 -0.24 -1.43 -0.59 -2.09 -1c-0.72 -0.45 -1.39 -0.98 -1.91 -1.5Z">
+                                <animate fill="freeze" attributeName="d" begin="0.6s" dur="0.2s"
+                                    values="M5 15.5c1 1 2.5 2 4 2.5c-0.71 -0.24 -1.43 -0.59 -2.09 -1c-0.72 -0.45 -1.39 -0.98 -1.91 -1.5Z;M5 15.5c1 1 2.5 2 4 2.5c-2 2 -5 3 -7 3c2 -2 3 -3.5 3 -5.5Z" />
+                                <set fill="freeze" attributeName="fill-opacity" begin="0.6s" to="1" />
+                            </path>
+                            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2">
+                                <path fill="currentColor" fill-opacity="0" stroke-dasharray="56" stroke-dashoffset="56"
+                                    d="M7 16.82c-2.41 -1.25 -4 -3.39 -4 -5.82c0 -3.87 4.03 -7 9 -7c4.97 0 9 3.13 9 7c0 3.87 -4.03 7 -9 7c-1.85 0 -3.57 -0.43 -5 -1.18Z">
+                                    <animate fill="freeze" attributeName="fill-opacity" begin="0.9s" dur="0.15s"
+                                        values="0;0.3" />
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s"
+                                        values="56;0" />
+                                </path>
+                                <path stroke-dasharray="4" stroke-dashoffset="4" d="M12 8v2">
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.05s"
+                                        dur="0.2s" values="4;0" />
+                                </path>
+                                <path stroke-dasharray="2" stroke-dashoffset="2" d="M12 14v0.01">
+                                    <animate fill="freeze" attributeName="stroke-dashoffset" begin="1.25s"
+                                        dur="0.2s" values="2;0" />
+                                </path>
+                            </g>
+                        </svg>
                         {{ __('Chat') }}
                     </x-nav-link>
                 </div>
@@ -44,7 +68,7 @@ new class extends Component {
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-slate-600 bg-slate-50 hover:text-slate-800 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
                             <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                                 x-on:profile-updated.window="name = $event.detail.name"></div>
 
@@ -77,7 +101,7 @@ new class extends Component {
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
                 <button @click="open = ! open"
-                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                    class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-slate-600 hover:bg-slate-100 focus:outline-none focus:bg-slate-100 focus:text-slate-600 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{ 'hidden': open, 'inline-flex': !open }" class="inline-flex"
                             stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -96,14 +120,17 @@ new class extends Component {
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('chat')" :active="request()->routeIs('chat')" wire:navigate>
+                {{ __('Chat') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="pt-4 pb-1 border-t border-slate-200">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
+                <div class="font-medium text-base text-slate-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                     x-on:profile-updated.window="name = $event.detail.name"></div>
-                <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                <div class="font-medium text-sm text-slate-500">{{ auth()->user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
