@@ -36,7 +36,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 
 ## 📋 Features Implemented
 
-### ✅ Section 1: Real-time Broadcasting (25 points)
+### ✅ Section 1: Real-time Broadcasting
 
 - **Laravel Reverb** WebSocket server integration
 - **Real-time chat system** with presence channels
@@ -45,7 +45,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 - **Optimized performance** with Laravel's `defer()` method
 
 
-### ✅ Section 2: Queue Management with Horizon (20 points)
+### ✅ Section 2: Queue Management with Horizon
 
 - **Laravel Horizon** dashboard for queue monitoring
 - **Multiple queue workers** with balanced processing
@@ -54,7 +54,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 - **Queue balancing** and auto-scaling
 
 
-### ✅ Section 3: Laravel Pulse Integration (15 points)
+### ✅ Section 3: Laravel Pulse Integration
 
 - **Request throughput** monitoring
 - **Broadcast events** tracking
@@ -63,7 +63,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 - **Cache hit/miss ratios** analysis
 
 
-### ✅ Section 4: Prometheus \& Grafana (20 points)
+### ✅ Section 4: Prometheus \& Grafana
 
 - **Metrics endpoint** exposing Pulse and Horizon data
 - **Prometheus scraping** configuration
@@ -72,7 +72,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 - **Custom alert rules** and thresholds
 
 
-### ✅ Section 5: Rate Limiting \& Health Checks (20 points)
+### ✅ Section 5: Rate Limiting \& Health Checks
 
 - **Rate limiting** on critical endpoints
 - **Comprehensive health checks** for all services
@@ -94,7 +94,7 @@ This project demonstrates a production-ready Laravel application with comprehens
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/laravel-realtime-monitoring.git
+https://github.com/davidchemwetich/realtime-monitoing-system
 cd laravel-realtime-monitoring
 ```
 
