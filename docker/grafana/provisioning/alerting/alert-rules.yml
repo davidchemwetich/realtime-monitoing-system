@@ -1,0 +1,262 @@
+apiVersion: 1
+
+groups:
+  - name: "Laravel Monitoring Alerts"
+    orgId: 1
+    folder: "Laravel Alerts"
+    interval: "30s"
+    rules:
+      # High Queue Backlog Alert
+      - uid: "high_queue_backlog"
+        title: "High Queue Backlog"
+        condition: "B"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "laravel_queue_size"
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [100]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "2m"
+        annotations:
+          summary: "High queue backlog detected"
+          description: "Queue has {{ $value }} jobs waiting for processing"
+        labels:
+          severity: "warning"
+          service: "laravel-app"
+          component: "queue"
+
+      # Critical Queue Backlog
+      - uid: "critical_queue_backlog"
+        title: "Critical Queue Backlog"
+        condition: "B"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "laravel_queue_size"
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [500]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "1m"
+        annotations:
+          summary: "Critical queue backlog"
+          description: "Queue has {{ $value }} jobs - immediate attention required"
+        labels:
+          severity: "critical"
+          service: "laravel-app"
+          component: "queue"
+
+      # Slow Response Times
+      - uid: "slow_response_times"
+        title: "Slow Response Times"
+        condition: "B"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "laravel_pulse_slow_requests_total"
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [10]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "3m"
+        annotations:
+          summary: "High number of slow requests"
+          description: "{{ $value }} slow requests detected in the last 5 minutes"
+        labels:
+          severity: "warning"
+          service: "laravel-app"
+          component: "web"
+
+      # Error Rate Spikes
+      - uid: "high_error_rate"
+        title: "High Error Rate"
+        condition: "B"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "laravel_pulse_exceptions_total"
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [5]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "2m"
+        annotations:
+          summary: "High error rate detected"
+          description: "{{ $value }} exceptions occurred in the last 5 minutes"
+        labels:
+          severity: "critical"
+          service: "laravel-app"
+          component: "application"
+
+      # Database Connection Issues
+      - uid: "database_connection_issues"
+        title: "Database Connection Issues"
+        condition: "B"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "laravel_database_connections_active"
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: "lt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "1m"
+        annotations:
+          summary: "Database connectivity issues"
+          description: "Active database connections: {{ $value }}"
+        labels:
+          severity: "critical"
+          service: "laravel-app"
+          component: "database"

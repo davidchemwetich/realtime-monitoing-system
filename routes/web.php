@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ChatController;
 use Illuminate\Support\Facades\Route;
+use Prometheus\CollectorRegistry;
+use Prometheus\RenderTextFormat;
+use App\Prometheus\LaravelMetricsCollector;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,4 +37,33 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 });
 
+
+Route::get('/metrics', function (CollectorRegistry $registry) {
+    try {
+        // Collect all metrics
+        $metricsCollector = new LaravelMetricsCollector($registry);
+        $metricsCollector->collectMetrics();
+
+        // Render metrics
+        $renderer = new RenderTextFormat();
+        $metrics = $registry->getMetricFamilySamples();
+
+        $output = $renderer->render($metrics);
+
+        return response($output, 200)
+            ->header('Content-Type', RenderTextFormat::MIME_TYPE);
+
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Metrics endpoint error: ' . $e->getMessage());
+
+        return response('# Metrics temporarily unavailable', 200)
+            ->header('Content-Type', RenderTextFormat::MIME_TYPE);
+    }
+});
+
 require __DIR__ . '/auth.php';
+
+
+
+
+

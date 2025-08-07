@@ -1,0 +1,131 @@
+groups:
+  - name: laravel_alerts
+    rules:
+      # High queue backlog alert
+      - alert: HighQueueBacklog
+        expr: laravel_queue_size > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: queue
+        annotations:
+          summary: "High queue backlog detected"
+          description: "Queue {{ $labels.queue }} has {{ $value }} jobs waiting for processing. This indicates potential system overload."
+
+      - alert: CriticalQueueBacklog
+        expr: laravel_queue_size > 500
+        for: 1m
+        labels:
+          severity: critical
+          service: laravel-app
+          component: queue
+        annotations:
+          summary: "Critical queue backlog - immediate attention required"
+          description: "Queue {{ $labels.queue }} has {{ $value }} jobs. System is severely overloaded and requires immediate intervention."
+
+      # Slow response times
+      - alert: SlowResponseTimes
+        expr: laravel_pulse_slow_requests_total > 10
+        for: 3m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: web
+        annotations:
+          summary: "High number of slow HTTP requests"
+          description: "{{ $value }} slow requests (>1000ms) detected in the last 5 minutes. User experience may be degraded."
+
+      # Error rate spikes
+      - alert: HighErrorRate
+        expr: laravel_pulse_exceptions_total > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: laravel-app
+          component: application
+        annotations:
+          summary: "High application error rate detected"
+          description: "{{ $value }} exceptions occurred in the last 5 minutes. Application stability is compromised."
+
+      # Database connection issues
+      - alert: DatabaseConnectionIssues
+        expr: laravel_database_connections_active < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: laravel-app
+          component: database
+        annotations:
+          summary: "Database connectivity issues"
+          description: "Active database connections: {{ $value }}. Application cannot function without database connectivity."
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: laravel_app_memory_usage_bytes > 134217728  # 128MB
+        for: 5m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: system
+        annotations:
+          summary: "High application memory usage"
+          description: "Memory usage is {{ $value | humanize1024 }}B. Monitor for potential memory leaks or increase resources."
+
+      - alert: CriticalMemoryUsage
+        expr: laravel_app_memory_usage_bytes > 268435456  # 256MB
+        for: 2m
+        labels:
+          severity: critical
+          service: laravel-app
+          component: system
+        annotations:
+          summary: "Critical memory usage - intervention required"
+          description: "Memory usage is {{ $value | humanize1024 }}B. Risk of OOM errors and application crashes."
+
+      # Cache effectiveness
+      - alert: LowCacheEffectiveness
+        expr: laravel_pulse_cache_effectiveness_percent < 70
+        for: 5m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: cache
+        annotations:
+          summary: "Low cache effectiveness"
+          description: "Cache hit rate is only {{ $value }}%. Consider cache optimization or configuration review."
+
+      # Failed jobs accumulation
+      - alert: HighFailedJobs
+        expr: laravel_queue_failed_jobs_total > 10
+        for: 1m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: queue
+        annotations:
+          summary: "High number of failed jobs"
+          description: "{{ $value }} jobs have failed and require attention. Check queue worker status and job logic."
+
+      - alert: CriticalFailedJobs
+        expr: laravel_queue_failed_jobs_total > 25
+        for: 1m
+        labels:
+          severity: critical
+          service: laravel-app
+          component: queue
+        annotations:
+          summary: "Critical number of failed jobs"
+          description: "{{ $value }} jobs have failed. This indicates serious system issues requiring immediate investigation."
+
+      # Low job throughput (Horizon monitoring)
+      - alert: LowJobThroughput
+        expr: laravel_horizon_jobs_per_minute < 5
+        for: 10m
+        labels:
+          severity: warning
+          service: laravel-app
+          component: horizon
+        annotations:
+          summary: "Low job processing throughput"
+          description: "Only {{ $value }} jobs processed per minute. Check Horizon worker status and queue configuration."
