@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
 use Prometheus\CollectorRegistry;
 use Prometheus\RenderTextFormat;
@@ -18,8 +19,8 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Chat routes
-Route::middleware('auth')->group(function () {
+// Chat routes with rate limiting
+Route::middleware(['auth', 'throttle:chat-messages'])->group(function () {
     Route::get('/chat', function () {
         return view('chat');
     })->name('chat');
@@ -27,6 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/notify', [ChatController::class, 'notify'])->name('notify');
 });
 
+// Health check route with rate limiting
+Route::middleware('throttle:health-checks')->group(function () {
+    Route::get('/health', [HealthController::class, 'check'])->name('health.check');
+});
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

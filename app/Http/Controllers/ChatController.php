@@ -6,14 +6,41 @@ use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Pulse\Facades\Pulse;
 use Throwable;
 
 class ChatController extends Controller
 {
+    /**
+     * This method accepts a message and broadcasts with rate limiting
+     */
     public function notify(Request $request)
     {
         $startTime = microtime(true);
+
+        // Check rate limiting first
+        $key = $request->user()?->id ?: $request->ip();
+
+        if (RateLimiter::tooManyAttempts('chat-messages:' . $key, 30)) {
+            $retryAfter = RateLimiter::availableIn('chat-messages:' . $key);
+
+            // Record rate limit hit for monitoring
+            Pulse::record(
+                type: 'chat_rate_limits',
+                key: 'rate_limit_hits',
+                value: 1
+            )->count();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many messages sent. Please slow down.',
+                'retry_after' => $retryAfter
+            ], 429);
+        }
+
+        // Increment rate limiter
+        RateLimiter::hit('chat-messages:' . $key, 60); // 1 minute decay
 
         $request->validate([
             'message' => 'required|string|max:500',
@@ -49,7 +76,7 @@ class ChatController extends Controller
                 Pulse::record(
                     type: 'chat_performance',
                     key: 'message_processing_time',
-                    value: (microtime(true) - $startTime) * 1000 // Convert to milliseconds
+                    value: (microtime(true) - $startTime) * 1000
                 )->avg();
             });
 
@@ -57,7 +84,8 @@ class ChatController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Message broadcast successfully.'
+                'message' => 'Message broadcast successfully.',
+                'rate_limit_remaining' => RateLimiter::remaining('chat-messages:' . $key, 30)
             ]);
 
         } catch (Throwable $e) {
