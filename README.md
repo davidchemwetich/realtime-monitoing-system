@@ -76,7 +76,7 @@ This project showcases enterprise-level Laravel features through a real-time cha
 - Automated data cleanup scheduling  
 
 ### **Screenshot Required**
-![Pulse Dashboard](https://via.placeholder.com/800x400.png?text=Pulse+Dashboard+with+Metrics)
+![Pulse Dashboard](https://postimg.cc/MnDccLvM/800x400.png?text=Pulse+Dashboard+with+Metrics)
 
 ---
 
