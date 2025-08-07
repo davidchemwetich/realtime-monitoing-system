@@ -31,7 +31,7 @@ This project showcases enterprise-level Laravel features through a real-time cha
 - Responsive UI with user avatars and timestamps  
 
 ### **Screenshot Required**
-![Chat Interface](https://via.placeholder.com/800x400.png?text=Chat+Interface+with+Active+Users+and+Messages)
+![Chat Interface](https://i.postimg.cc/wjRhFxCM/15-56-33.png?text=Chat+Interface+with+Active+Users+and+Messages)
 
 ---
 
