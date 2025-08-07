@@ -965,15 +965,6 @@ git commit -m 'Add amazing feature'
 git push origin feature/amazing-feature
 ```
 
-
-### Code Standards
-
-- **PSR-12** coding standards for PHP
-- **ESLint** for JavaScript code
-- **PHPStan Level 8** for static analysis
-- **100% test coverage** for critical features
-
-
 ### Performance Validation
 
 ```bash
