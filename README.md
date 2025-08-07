@@ -32,6 +32,7 @@ This project showcases enterprise-level Laravel features through a real-time cha
 
 ### **Screenshot Required**
 ![Chat Interface](https://i.postimg.cc/wjRhFxCM/15-56-33.png?text=Chat+Interface+with+Active+Users+and+Messages)
+![Chat Interface](https://i.postimg.cc/V6PQ568C/Screenshot-2025-08-06-19-24-10.png?text=Chat+Interface+with+Active+Users+and+Messages)
 
 ---
 
