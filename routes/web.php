@@ -1,14 +1,11 @@
 <?php
 
 use App\Http\Controllers\ChatController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
-
-
 // Add this temporarily for testing
 Route::middleware('auth')->get('/test-route', function () {
     return response()->json(['message' => 'Route is working!']);
@@ -32,5 +29,9 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::middleware(['web', 'auth'])->group(function () {
+    // This route is automatically registered by Pulse
+
+});
 
 require __DIR__ . '/auth.php';

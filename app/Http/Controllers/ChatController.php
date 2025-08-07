@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessBroadcastMessage;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Laravel\Pulse\Facades\Pulse;
 use Throwable;
 
 class ChatController extends Controller
 {
-    /**
-     * This method accepts a message and queues it for broadcast processing
-     */
     public function notify(Request $request)
     {
+        $startTime = microtime(true);
+
         $request->validate([
             'message' => 'required|string|max:500',
         ]);
@@ -31,32 +31,51 @@ class ChatController extends Controller
 
             $message = $request->input('message');
 
-            // Log request analytics using defer for performance
-            defer(function () use ($message, $user) {
-                Log::info('Message queued for processing', [
+            // Record custom metric for message processing
+            Pulse::record(
+                type: 'chat_message',
+                key: 'messages_sent',
+                value: 1
+            )->count();
+
+            defer(function () use ($message, $user, $startTime) {
+                Log::info('Logging message analytics.', [
                     'user_id' => $user->id,
                     'message_length' => strlen($message),
-                    'queued_at' => now()->toISOString()
+                    'processing_time' => microtime(true) - $startTime,
                 ]);
+
+                // Record processing time
+                Pulse::record(
+                    type: 'chat_performance',
+                    key: 'message_processing_time',
+                    value: (microtime(true) - $startTime) * 1000 // Convert to milliseconds
+                )->avg();
             });
 
-            // Dispatch the job to the broadcasts queue
-            ProcessBroadcastMessage::dispatch($message, $user);
+            broadcast(new MessageSent($message, $user))->toOthers();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Message queued for broadcast successfully.'
+                'message' => 'Message broadcast successfully.'
             ]);
 
         } catch (Throwable $e) {
+            // Record error metrics
+            Pulse::record(
+                type: 'chat_errors',
+                key: 'message_send_failures',
+                value: 1
+            )->count();
+
             Log::error('Error in ChatController@notify: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'An internal server error occurred while queuing the message.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+                'message' => 'An internal server error occurred while sending the message.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
