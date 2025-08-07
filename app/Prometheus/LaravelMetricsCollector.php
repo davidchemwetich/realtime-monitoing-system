@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Log;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
-use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Pulse\Facades\Pulse;
 use Prometheus\CollectorRegistry;
 use Throwable;
@@ -29,8 +27,6 @@ class LaravelMetricsCollector
         $this->registerPulseMetrics();
         $this->registerDatabaseMetrics();
         $this->registerHealthMetrics();
-        $this->registerHorizonMetrics();
-        $this->registerCacheMetrics();
         $this->registerRateLimitingMetrics();
     }
 
@@ -49,11 +45,11 @@ class LaravelMetricsCollector
             $memoryPeakGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'app_memory_peak_bytes',
-                'Peak memory usage in bytes'
+                'Application peak memory usage in bytes'
             );
             $memoryPeakGauge->set(memory_get_peak_usage(true));
 
-            // PHP version gauge with label
+            // PHP version information
             $phpVersionGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'app_php_version_info',
@@ -62,7 +58,7 @@ class LaravelMetricsCollector
             );
             $phpVersionGauge->set(1, [PHP_VERSION]);
 
-            // Application uptime (approximated)
+            // Application uptime
             $uptimeGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'app_uptime_seconds',
@@ -71,7 +67,7 @@ class LaravelMetricsCollector
             $uptimeGauge->set($this->getApplicationUptime());
 
         } catch (Throwable $e) {
-            Log::warning('Application metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Application metrics collection failed: ' . $e->getMessage());
         }
     }
 
@@ -92,7 +88,6 @@ class LaravelMetricsCollector
                     $size = Queue::size($queueName);
                     $queueSizeGauge->set($size, [$queueName]);
                 } catch (Throwable $e) {
-                    // If queue doesn't exist, set to 0
                     $queueSizeGauge->set(0, [$queueName]);
                 }
             }
@@ -107,18 +102,17 @@ class LaravelMetricsCollector
                 );
                 $failedJobsGauge->set($failedJobs);
             } catch (Throwable $e) {
-                // Table might not exist, set to 0
+                // Table might not exist
             }
 
         } catch (Throwable $e) {
-            Log::warning('Queue metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Queue metrics collection failed: ' . $e->getMessage());
         }
     }
 
     private function registerPulseMetrics(): void
     {
         try {
-            // Get Pulse database connection
             $pulseDB = DB::connection(config('pulse.database.connection', 'mysql'));
 
             // Slow queries monitoring
@@ -126,36 +120,36 @@ class LaravelMetricsCollector
                 ->where('type', 'slow_query')
                 ->where('timestamp', '>=', now()->subMinutes(5)->timestamp)
                 ->count();
-            $gaugeSlowQueries = $this->registry->getOrRegisterGauge(
+            $slowQueriesGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_slow_queries_total',
                 'Number of slow queries in last 5 minutes'
             );
-            $gaugeSlowQueries->set($slowQueries);
+            $slowQueriesGauge->set($slowQueries);
 
             // Slow requests monitoring
             $slowRequests = $pulseDB->table('pulse_entries')
                 ->where('type', 'slow_request')
                 ->where('timestamp', '>=', now()->subMinutes(5)->timestamp)
                 ->count();
-            $gaugeSlowRequests = $this->registry->getOrRegisterGauge(
+            $slowRequestsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_slow_requests_total',
                 'Number of slow requests in last 5 minutes'
             );
-            $gaugeSlowRequests->set($slowRequests);
+            $slowRequestsGauge->set($slowRequests);
 
             // Request throughput
             $recentRequests = $pulseDB->table('pulse_entries')
                 ->where('type', 'user_request')
                 ->where('timestamp', '>=', now()->subMinute()->timestamp)
                 ->count();
-            $gaugeRequests = $this->registry->getOrRegisterGauge(
+            $requestsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_requests_per_minute',
                 'Number of requests per minute'
             );
-            $gaugeRequests->set($recentRequests);
+            $requestsGauge->set($recentRequests);
 
             // Cache hits and misses
             $cacheHits = $pulseDB->table('pulse_entries')
@@ -167,51 +161,51 @@ class LaravelMetricsCollector
                 ->where('timestamp', '>=', now()->subMinutes(5)->timestamp)
                 ->count();
 
-            $gaugeCacheHits = $this->registry->getOrRegisterGauge(
+            $cacheHitsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_cache_hits_total',
                 'Cache hits in last 5 minutes'
             );
-            $gaugeCacheHits->set($cacheHits);
+            $cacheHitsGauge->set($cacheHits);
 
-            $gaugeCacheMisses = $this->registry->getOrRegisterGauge(
+            $cacheMissesGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_cache_misses_total',
                 'Cache misses in last 5 minutes'
             );
-            $gaugeCacheMisses->set($cacheMisses);
+            $cacheMissesGauge->set($cacheMisses);
 
             // Cache effectiveness ratio
             $total = $cacheHits + $cacheMisses;
-            $cacheEffectiveness = $total > 0 ? ($cacheHits / $total) * 100 : 0;
-            $gaugeCacheEff = $this->registry->getOrRegisterGauge(
+            $effectiveness = $total > 0 ? ($cacheHits / $total) * 100 : 0;
+            $effectivenessGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_cache_effectiveness_percent',
                 'Cache effectiveness percentage'
             );
-            $gaugeCacheEff->set($cacheEffectiveness);
+            $effectivenessGauge->set($effectiveness);
 
             // Exceptions monitoring
             $exceptions = $pulseDB->table('pulse_entries')
                 ->where('type', 'exception')
                 ->where('timestamp', '>=', now()->subMinutes(5)->timestamp)
                 ->count();
-            $gaugeExceptions = $this->registry->getOrRegisterGauge(
+            $exceptionsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'pulse_exceptions_total',
                 'Number of exceptions in last 5 minutes'
             );
-            $gaugeExceptions->set($exceptions);
+            $exceptionsGauge->set($exceptions);
 
         } catch (Throwable $e) {
-            Log::warning('Pulse metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Pulse metrics collection failed: ' . $e->getMessage());
         }
     }
 
     private function registerDatabaseMetrics(): void
     {
         try {
-            // Database connectivity check
+            // Database connection count
             $connectionsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'database_connections_active',
@@ -219,13 +213,11 @@ class LaravelMetricsCollector
             );
 
             try {
-                // Try to get actual connection count
                 $connections = DB::table('information_schema.processlist')
                     ->where('db', config('database.connections.mysql.database'))
                     ->count();
                 $connectionsGauge->set($connections);
             } catch (Throwable $e) {
-                // Fallback: if we can connect at all, set to 1
                 try {
                     DB::connection()->getPdo();
                     $connectionsGauge->set(1);
@@ -239,18 +231,18 @@ class LaravelMetricsCollector
             try {
                 DB::selectOne('SELECT 1');
                 $responseTime = (microtime(true) - $startTime) * 1000;
-                $dbResponseTimeGauge = $this->registry->getOrRegisterGauge(
+                $responseTimeGauge = $this->registry->getOrRegisterGauge(
                     'laravel',
                     'database_response_time_ms',
                     'Database response time in milliseconds'
                 );
-                $dbResponseTimeGauge->set($responseTime);
+                $responseTimeGauge->set($responseTime);
             } catch (Throwable $e) {
-                // Database unreachable
+                // Database unable to connect
             }
 
         } catch (Throwable $e) {
-            Log::warning('Database metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Database metrics collection failed: ' . $e->getMessage());
         }
     }
 
@@ -264,8 +256,7 @@ class LaravelMetricsCollector
                 'Overall application health status (1=healthy, 0=unhealthy)'
             );
 
-            // Perform comprehensive health check
-            $isHealthy = $this->performComprehensiveHealthCheck();
+            $isHealthy = $this->performQuickHealthCheck();
             $healthGauge->set($isHealthy ? 1 : 0);
 
             // Individual service health checks
@@ -281,7 +272,7 @@ class LaravelMetricsCollector
             $healthTimingGauge->set($healthCheckTime);
 
         } catch (Throwable $e) {
-            Log::warning('Health metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Health metrics collection failed: ' . $e->getMessage());
         }
     }
 
@@ -331,6 +322,23 @@ class LaravelMetricsCollector
             $queueHealthGauge->set(0);
         }
 
+        // Horizon health (if available)
+        $horizonHealthGauge = $this->registry->getOrRegisterGauge(
+            'laravel',
+            'horizon_health_status',
+            'Horizon health status (1=healthy, 0=unhealthy)'
+        );
+        try {
+            if (app()->bound(MasterSupervisorRepository::class)) {
+                $supervisors = app(MasterSupervisorRepository::class)->all();
+                $horizonHealthGauge->set(count($supervisors) > 0 ? 1 : 0);
+            } else {
+                $horizonHealthGauge->set(0);
+            }
+        } catch (Throwable $e) {
+            $horizonHealthGauge->set(0);
+        }
+
         // Redis health (if configured)
         if (config('database.redis.default')) {
             $redisHealthGauge = $this->registry->getOrRegisterGauge(
@@ -348,83 +356,6 @@ class LaravelMetricsCollector
         }
     }
 
-    private function registerHorizonMetrics(): void
-    {
-        try {
-            if (!class_exists(\Laravel\Horizon\Horizon::class)) {
-                return;
-            }
-
-            // Horizon supervisor status
-            if (app()->bound(MasterSupervisorRepository::class)) {
-                $supervisors = app(MasterSupervisorRepository::class)->all();
-                $activeSupervisors = count($supervisors);
-
-                $horizonSupervisorGauge = $this->registry->getOrRegisterGauge(
-                    'laravel',
-                    'horizon_supervisors_active',
-                    'Number of active Horizon supervisors'
-                );
-                $horizonSupervisorGauge->set($activeSupervisors);
-
-                // Horizon health
-                $horizonHealthGauge = $this->registry->getOrRegisterGauge(
-                    'laravel',
-                    'horizon_health_status',
-                    'Horizon health status (1=healthy, 0=unhealthy)'
-                );
-                $horizonHealthGauge->set($activeSupervisors > 0 ? 1 : 0);
-            }
-
-        } catch (Throwable $e) {
-            Log::warning('Horizon metrics collection failed: ' . $e->getMessage());
-        }
-    }
-
-    private function registerCacheMetrics(): void
-    {
-        try {
-            // Cache operations metrics
-            $cacheOperationsGauge = $this->registry->getOrRegisterGauge(
-                'laravel',
-                'cache_operations_total',
-                'Total cache operations'
-            );
-            $cacheOperationsGauge->set(1); // Placeholder - would need actual tracking
-
-            // Redis-specific metrics if available
-            if (config('cache.default') === 'redis') {
-                try {
-                    $redis = Cache::getRedis();
-                    $info = $redis->info();
-
-                    if (isset($info['used_memory'])) {
-                        $redisMemoryGauge = $this->registry->getOrRegisterGauge(
-                            'laravel',
-                            'redis_memory_used_bytes',
-                            'Redis memory usage in bytes'
-                        );
-                        $redisMemoryGauge->set($info['used_memory']);
-                    }
-
-                    if (isset($info['connected_clients'])) {
-                        $redisClientsGauge = $this->registry->getOrRegisterGauge(
-                            'laravel',
-                            'redis_connected_clients',
-                            'Number of connected Redis clients'
-                        );
-                        $redisClientsGauge->set($info['connected_clients']);
-                    }
-                } catch (Throwable $e) {
-                    // Redis info not available
-                }
-            }
-
-        } catch (Throwable $e) {
-            Log::warning('Cache metrics collection failed: ' . $e->getMessage());
-        }
-    }
-
     private function registerRateLimitingMetrics(): void
     {
         try {
@@ -432,15 +363,13 @@ class LaravelMetricsCollector
             $rateLimitHitsGauge = $this->registry->getOrRegisterGauge(
                 'laravel',
                 'rate_limit_hits_total',
-                'Total rate limit hits'
+                'Total rate limit hits in last 5 minutes'
             );
 
-            // This would need to be tracked in your ChatController
-            // For now, we'll set a placeholder
             try {
                 $pulseDB = DB::connection(config('pulse.database.connection', 'mysql'));
                 $rateLimitHits = $pulseDB->table('pulse_entries')
-                    ->where('type', 'chat_rate_limits')
+                    ->where('type', 'rate_limiting')
                     ->where('timestamp', '>=', now()->subMinutes(5)->timestamp)
                     ->sum('value');
                 $rateLimitHitsGauge->set($rateLimitHits ?: 0);
@@ -449,11 +378,11 @@ class LaravelMetricsCollector
             }
 
         } catch (Throwable $e) {
-            Log::warning('Rate limiting metrics collection failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Rate limiting metrics collection failed: ' . $e->getMessage());
         }
     }
 
-    private function performComprehensiveHealthCheck(): bool
+    private function performQuickHealthCheck(): bool
     {
         try {
             // Check critical systems
@@ -478,7 +407,7 @@ class LaravelMetricsCollector
     private function measureHealthCheckTime(): float
     {
         $startTime = microtime(true);
-        $this->performComprehensiveHealthCheck();
+        $this->performQuickHealthCheck();
         return (microtime(true) - $startTime) * 1000; // Convert to milliseconds
     }
 

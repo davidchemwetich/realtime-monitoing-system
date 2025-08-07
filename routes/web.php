@@ -19,7 +19,7 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Chat routes with rate limiting
+// Chat routes rate limiting
 Route::middleware(['auth', 'throttle:chat-messages'])->group(function () {
     Route::get('/chat', function () {
         return view('chat');
@@ -28,20 +28,13 @@ Route::middleware(['auth', 'throttle:chat-messages'])->group(function () {
     Route::post('/notify', [ChatController::class, 'notify'])->name('notify');
 });
 
-// Health check route with rate limiting
+// Health check route rate limiting
 Route::middleware('throttle:health-checks')->group(function () {
     Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 });
-
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
-
-Route::middleware(['web', 'auth'])->group(function () {
-    // This route is automatically registered by Pulse
-
-});
-
 
 Route::get('/metrics', function (CollectorRegistry $registry) {
     try {

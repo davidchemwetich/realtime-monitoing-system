@@ -9,30 +9,22 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->configureRateLimiting();
     }
 
-    /**
-     * Configuring the rate limiters for the application.
-     */
     protected function configureRateLimiting(): void
     {
+        // Chat messages rate limiting to prevent abuse
         RateLimiter::for('chat-messages', function (Request $request) {
             return [
-                // Primary limit: 30 messages per minute
+                // Primary limit: 30 messages per minute for authenticated users
                 Limit::perMinute(30)->by($request->user()?->id ?: $request->ip()),
 
                 // Burst protection: 10 messages per 10 seconds
@@ -42,14 +34,21 @@ class AppServiceProvider extends ServiceProvider
                         return response()->json([
                             'success' => false,
                             'message' => 'Too many messages sent. Please slow down.',
-                            'retry_after' => 10
+                            'retry_after' => 10,
+                            'rate_limit_exceeded' => true
                         ], 429);
                     }),
             ];
         });
 
+        // Health check rate limiting
         RateLimiter::for('health-checks', function (Request $request) {
             return Limit::perMinute(60)->by($request->ip());
+        });
+
+        // General API rate limiting
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(100)->by($request->user()?->id ?: $request->ip());
         });
     }
 }
