@@ -54,8 +54,7 @@ This project showcases enterprise-level Laravel features through a real-time cha
 - Secure dashboard access with email-based authorization  
 
 ### **Screenshot Required**
-![Horizon Dashboard](https://i.postimg.cc/8zdLxXCg/zig-2025-08-07-08-58-38.png?text=Horizon+Dashboard+Queue+Metrics)
-![Horizon Dashboard](https://i.postimg.cc/QMXcDgB9/zig-42025-08-07-08-59-09.png?text=Horizon+Dashboard+Queue+Metrics)
+![Horizon Dashboard](https://i.postimg.cc/DzV1Nkhg/Screenshot-2025-08-06-15-58-17.png?text=Horizon+Dashboard+Queue+Metrics)
 
 ---
 
@@ -78,7 +77,8 @@ This project showcases enterprise-level Laravel features through a real-time cha
 - Automated data cleanup scheduling  
 
 ### **Screenshot Required**
-![Pulse Dashboard](https://postimg.cc/MnDccLvM/800x400.png?text=Pulse+Dashboard+with+Metrics)
+![Pulse Dashboard](https://i.postimg.cc/8zdLxXCg/zig-2025-08-07-08-58-38.png?text=Pulse+Dashboard+with+Metrics)
+![Pulse Dashboard](https://i.postimg.cc/QMXcDgB9/zig-42025-08-07-08-59-09.png?text=Pulse+Dashboard+with+Metrics)
 
 ---
 
