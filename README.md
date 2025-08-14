@@ -974,7 +974,7 @@ ab -n 50 -c 5 http://localhost/
 # Monitor resource usage during test
 docker stats --no-stream laravel.test mysql redis prometheus grafana
 ```
-https://t.me/MetricsSentinelBot
+            |https://t.me/MetricsSentinelBot|
 **Built with ❤️ using Laravel 12, Docker Sail, and the power of real-time monitoring**
 
 <div style="text-align: center">⁂</div>
